@@ -19,6 +19,7 @@ export interface SSHConnection {
     keepaliveInterval?: number
     keepaliveCountMax?: number
     readyTimeout?: number
+    proxy?: string
 }
 
 export class SSHSession extends BaseSession {

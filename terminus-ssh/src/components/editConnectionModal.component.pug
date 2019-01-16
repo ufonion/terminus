@@ -85,6 +85,13 @@
                         placeholder='20000', 
                         [(ngModel)]='connection.readyTimeout', 
                     )
+                .form-group
+                    label Proxy
+                    input.form-control(
+                        type='text', 
+                        placeholder='', 
+                        [(ngModel)]='connection.proxy', 
+                    )
 
         ngb-tab(id='scripts')
             ng-template(ngbTabTitle)

@@ -9,6 +9,7 @@ import { TerminalTabComponent } from 'terminus-terminal'
 import { SSHConnection, SSHSession } from '../api'
 import { PromptModalComponent } from '../components/promptModal.component'
 import { PasswordStorageService } from './passwordStorage.service'
+import { createSocksProxy } from './socksProxy';
 const { SSH2Stream } = require('ssh2-streams')
 
 let windowsProcessTree
@@ -73,6 +74,18 @@ export class SSHService {
         let ssh = new Client()
         let connected = false
         let savedPassword: string = null
+        let proxy = connection.proxy ? connection.proxy.toLowerCase() : undefined;
+        let proxySocks;
+        if (proxy) {
+            let type = 0;
+            type = proxy.startsWith('socks5://') ? 5 : type;
+            type = proxy.startsWith('socks4://') ? 4 : type;
+            if (type) {
+                proxySocks = await createSocksProxy(
+                    type as 4 | 5, proxy, connection.host, connection.port,
+                    this.logger);
+            }
+        }
         await new Promise(async (resolve, reject) => {
             ssh.on('ready', () => {
                 connected = true
@@ -130,6 +143,7 @@ export class SSHService {
                 keepaliveInterval: connection.keepaliveInterval,
                 keepaliveCountMax: connection.keepaliveCountMax,
                 readyTimeout: connection.readyTimeout,
+                sock: proxySocks,
             })
 
             let keychainPasswordUsed = false
@@ -172,7 +186,7 @@ export class SSHService {
 
             return this.zone.run(() => this.app.openNewTab(
                 TerminalTabComponent,
-                { session, sessionOptions: {} }
+                { session, sessionOptions: {}, title: connection.name }
             ) as TerminalTabComponent)
         } catch (error) {
             console.log(error)
